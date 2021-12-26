@@ -209,6 +209,15 @@ class TestBSEuropeanBinaryOption(_TestBSModule):
             # expect = torch.tensor(-0.0630)
             # assert_close(result, expect, atol=1e-4, rtol=1e-4)
 
+        lm = torch.tensor([0.0, 0.1, 0.2])
+        tm = torch.tensor([0.5, 1.0, 2.0])
+        vl = torch.tensor([0.1, 0.2, 0.3])
+        theta = m.theta(log_moneyness=lm, time_to_maturity=tm, volatility=vl)
+        vega = m.vega(log_moneyness=lm, time_to_maturity=tm, volatility=vl)
+        # For zero risk free rate, theta = vega * (- volatility / (2 * time_to_maturity))
+        # because the price only depends on volatility * sqrt(time_to_maturity)
+        assert_close(theta, -vega * vl / (2 * tm))
+
     def test_price(self):
         m = BSEuropeanBinaryOption()
 

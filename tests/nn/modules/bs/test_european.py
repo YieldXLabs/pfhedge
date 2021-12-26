@@ -187,13 +187,13 @@ class TestBSEuropeanOption(_TestBSModule):
 
     def test_price_1(self):
         m = BSEuropeanOption()
-        result = m.price(0.0, 1.0, 0.2)
+        result = m.price(torch.tensor(0.0), torch.tensor(1.0), torch.tensor(0.2))
         expect = torch.full_like(result, 0.0796557924)
         assert_close(result, expect)
 
     def test_price_2(self):
         m = BSEuropeanOption(call=False)
-        result = m.price(0.0, 1.0, 0.2)
+        result = m.price(torch.tensor(0.0), torch.tensor(1.0), torch.tensor(0.2))
         expect = torch.full_like(result, 0.0796557924)
         assert_close(result, expect)
 
@@ -227,6 +227,15 @@ class TestBSEuropeanOption(_TestBSModule):
         )
         expect = torch.tensor([-12.6094, -8.9117, -7.2727])
         assert_close(result, expect, atol=1e-3, rtol=0)
+
+        vega = m.vega(
+            log_moneyness=input[..., 0],
+            time_to_maturity=input[..., 1],
+            volatility=input[..., 2],
+        )
+        # For zero risk free rate, theta = vega * (- volatility / (2 * time_to_maturity))
+        # because the price only depends on volatility * sqrt(time_to_maturity)
+        assert_close(result, -vega * input[..., 2] / (2 * input[..., 1]))
 
     def test_example(self):
         from pfhedge.instruments import BrownianStock
